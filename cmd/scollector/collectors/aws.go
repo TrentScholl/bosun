@@ -16,23 +16,25 @@ import (
 )
 
 const (
-	awsCPU                = "aws.ec2.cpu"
-	awsEC2DiskBytes       = "aws.ec2.disk.bytes"
-	awsEC2DiskOps         = "aws.ec2.disk.ops"
-	awsELBHostsHealthy    = "aws.elb.hosts.healthy"
-	awsELBHostsUnHealthy  = "aws.elb.hosts.unhealthy"
-	awsELBLatencyAvg      = "aws.elb.latency.average"
-	awsELBLatencyMax      = "aws.elb.latency.maximum"
-	awsELBLatencyMin      = "aws.elb.latency.minimum"
-	awsNetwork            = "aws.ec2.net.bytes"
-	awsStatusCheckFailed  = "aws.ec2.status.failed"
-	descAWSEC2CPU         = "The average CPU Utilization, gathered at a 60 second interval and averaged over five minutes."
-	descAWSEC2DiskBytes   = "The average bytes written or read via disk, gathered at a 60 second interval and averaged over five minutes."
-	descAWSEC2DiskOps     = "The average disk operations, either written or read, gathered at a 60 second interval and averaged over five minutes."
-	descAWSEC2NetBytes    = "The average bytes transmitted or received via network, gathered at a 60 second interval and averaged over five minutes."
-	descAWSEC2StatusCheck = "The EC2 Status Check, which includes both instance-level and system-level drill-down, gathered every 60 seconds."
-	descAWSELBHostCount   = "The number of instances in what the Elastic Load Balancer considers a healthy state, gathered every 60 seconds."
-	descAWSELBLatency     = "The minimum, maximum and average latency as reported by the load balancer, gathered at a 60 second interval and averaged over five minutes."
+	awsCPU                     = "aws.ec2.cpu"
+	awsEC2DiskBytes            = "aws.ec2.disk.bytes"
+	awsEC2DiskOps              = "aws.ec2.disk.ops"
+	awsELBHostsHealthy         = "aws.elb.hosts.healthy"
+	awsELBHostsUnHealthy       = "aws.elb.hosts.unhealthy"
+	awsELBLatencyAvg           = "aws.elb.latency.average"
+	awsELBLatencyMax           = "aws.elb.latency.maximum"
+	awsELBLatencyMin           = "aws.elb.latency.minimum"
+	awsNetwork                 = "aws.ec2.net.bytes"
+    awsEC2CPUCreditBalance     = "aws.ec2.cpucredit.balance"
+	awsStatusCheckFailed       = "aws.ec2.status.failed"
+	descAWSEC2CPU              = "The average CPU Utilization, gathered at a 60 second interval and averaged over five minutes."
+	descAWSEC2DiskBytes        = "The average bytes written or read via disk, gathered at a 60 second interval and averaged over five minutes."
+	descAWSEC2DiskOps          = "The average disk operations, either written or read, gathered at a 60 second interval and averaged over five minutes."
+	descAWSEC2NetBytes         = "The average bytes transmitted or received via network, gathered at a 60 second interval and averaged over five minutes."
+    descAWSEC2CPUCreditBalance = "The average CPU Credit Balance, gathered at a 60 second interval and averaged over five minutes."
+	descAWSEC2StatusCheck      = "The EC2 Status Check, which includes both instance-level and system-level drill-down, gathered every 60 seconds."
+	descAWSELBHostCount        = "The number of instances in what the Elastic Load Balancer considers a healthy state, gathered every 60 seconds."
+	descAWSELBLatency          = "The minimum, maximum and average latency as reported by the load balancer, gathered at a 60 second interval and averaged over five minutes."
 )
 
 var aws_period = int64(60)
@@ -87,6 +89,7 @@ func c_aws(accessKey, secretKey, region string) (opentsdb.MultiDataPoint, error)
 		awsGetNetwork(*cw, &md, instance)
 		awsGetDiskBytes(*cw, &md, instance)
 		awsGetDiskOps(*cw, &md, instance)
+        awsGetCPUCreditBalance(*cw, &md, instance)
 		awsGetStatusChecks(*cw, &md, instance)
 	}
 	return md, nil
@@ -224,6 +227,27 @@ func awsGetDiskOps(cw cloudwatch.CloudWatch, md *opentsdb.MultiDataPoint, instan
 	}
 	for _, datapoint := range resp.Datapoints {
 		AddTS(md, awsEC2DiskOps, datapoint.Timestamp.Unix(), *datapoint.Average, opentsdb.TagSet{"instance": *instance.InstanceId, "operation": "write"}, metadata.Gauge, metadata.Count, descAWSEC2DiskOps)
+	}
+	return nil
+}
+
+func awsGetCPUCreditBalance(cw cloudwatch.CloudWatch, md *opentsdb.MultiDataPoint, instance *ec2.Instance) error {
+	search := cloudwatch.GetMetricStatisticsInput{
+		StartTime:  aws.Time(time.Now().UTC().Add(time.Second * -600)),
+		EndTime:    aws.Time(time.Now().UTC()),
+		MetricName: aws.String("CPUCreditBalance"),
+		Period:     &aws_period,
+		Statistics: []*string{aws.String("Average")},
+		Namespace:  aws.String("AWS/EC2"),
+		Unit:       aws.String("Count"),
+		Dimensions: []*cloudwatch.Dimension{{Name: aws.String("InstanceId"), Value: instance.InstanceId}},
+	}
+	resp, err := cw.GetMetricStatistics(&search)
+	if err != nil {
+		return err
+	}
+	for _, datapoint := range resp.Datapoints {
+		AddTS(md, awsEC2CPUCreditBalance, datapoint.Timestamp.Unix(), *datapoint.Average, opentsdb.TagSet{"instance": *instance.InstanceId}, metadata.Gauge, metadata.Count, descAWSEC2CPUCreditBalance)
 	}
 	return nil
 }

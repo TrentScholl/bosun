@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
+    
 	"bosun.org/metadata"
 	"bosun.org/opentsdb"
 )
@@ -46,16 +46,35 @@ func ravendbAdminStats(s string) (opentsdb.MultiDataPoint, error) {
 		return nil, err
 	}
 	defer res.Body.Close()
-	var o rdbAdminStats
-	if err := json.NewDecoder(res.Body).Decode(&o); err != nil {
+	var as rdbAdminStats
+	if err := json.NewDecoder(res.Body).Decode(&as); err != nil {
 		return nil, err
 	}
 	var md opentsdb.MultiDataPoint
-	ts := opentsdb.TagSet{"host": "010779455157"}
-	Add(&md, p+"totalnumberofrequests", o.TotalNumberOfRequests, ts, metadata.Counter, metadata.Request, DescRdbTotalRequests)
-    Add(&md, p+"memory.databasecachesize", o.Memory.DatabaseCacheSizeInMB*megabyte, ts, metadata.Gauge, metadata.Bytes, DescRdbMemoryDatabaseCacheSize)
-    Add(&md, p+"memory.managedmemorysize", o.Memory.ManagedMemorySizeInMB*megabyte, ts, metadata.Gauge, metadata.Bytes, DescRdbManagedMemorySize)
-    Add(&md, p+"memory.totalprocessmemorysize", o.Memory.TotalProcessMemorySizeInMB*megabyte, ts, metadata.Gauge, metadata.Bytes, DescRdbTotalProcessMemorySize)
+	Add(&md, p+"totalnumberofrequests", as.TotalNumberOfRequests, nil, metadata.Counter, metadata.Request, DescRdbTotalRequests)
+    Add(&md, p+"memory.databasecachesize", as.Memory.DatabaseCacheSizeInMB*megabyte, nil, metadata.Gauge, metadata.Bytes, DescRdbMemoryDatabaseCacheSize)
+    Add(&md, p+"memory.managedmemorysize", as.Memory.ManagedMemorySizeInMB*megabyte, nil, metadata.Gauge, metadata.Bytes, DescRdbManagedMemorySize)
+    Add(&md, p+"memory.totalprocessmemorysize", as.Memory.TotalProcessMemorySizeInMB*megabyte, nil, metadata.Gauge, metadata.Bytes, DescRdbTotalProcessMemorySize)
+    for _, ldb := range as.LoadedDatabases {
+        p := rdbPrefix + "database."
+        if ldb.Name == "" { 
+            continue // skip system database
+        }
+        ts := opentsdb.TagSet{"database": ldb.Name}
+		Add(&md, p+"transactionalstorageallocatedsize", ldb.TransactionalStorageAllocatedSize, ts, metadata.Gauge, metadata.Bytes, DescTransactionalStorageAllocatedSize)
+        Add(&md, p+"transactionalstorageusedsize", ldb.TransactionalStorageUsedSize, ts, metadata.Gauge, metadata.Bytes, DescTransactionalStorageUsedSize)
+		Add(&md, p+"indexstoragesize", ldb.IndexStorageSize, ts, metadata.Gauge, metadata.Bytes, DescIndexStorageSize)
+		Add(&md, p+"totaldatabasesize", ldb.TotalDatabaseSize, ts, metadata.Gauge, metadata.Bytes, DescTotalDatabaseSize)
+        Add(&md, p+"countofdocuments", ldb.CountOfDocuments, ts, metadata.Counter, metadata.Document, DescCountofDocuments)
+        Add(&md, p+"countofattachments", ldb.CountOfAttachments, ts, metadata.Counter, metadata.Document, DescCountOfAttachments)
+        Add(&md, p+"metrics.docswritespersecond", ldb.Metrics.DocsWritesPerSecond, ts, metadata.Gauge, metadata.Document, DescMetricsDocsWritesPerSecond)
+        Add(&md, p+"metrics.indexedpersecond", ldb.Metrics.IndexedPerSecond, ts, metadata.Gauge, metadata.Document, DescMetricsIndexedPerSecond)
+        Add(&md, p+"metrics.reducedpersecond", ldb.Metrics.ReducedPerSecond, ts, metadata.Gauge, "reduces", DescMetricsReducedPerSecond)
+        Add(&md, p+"metrics.requests.count", ldb.Metrics.Requests.Count, ts, metadata.Counter, metadata.Request, DescMetricsRequestsCount)
+        Add(&md, p+"metrics.requestsduration.counter", ldb.Metrics.Requests.Count, ts, metadata.Counter, "duration", DescMetricsRequestsDurationCounter)
+        Add(&md, p+"metrics.staleindexmaps.counter", ldb.Metrics.Requests.Count, ts, metadata.Counter, "index maps", DescMetricsStaleIndexMapsCounter)
+        Add(&md, p+"metrics.staleindexreduces.counter", ldb.Metrics.Requests.Count, ts, metadata.Counter, "index reduces", DescMetricsStaleIndexReducesCounter)
+    }
 	return md, nil
 }
 
@@ -67,6 +86,7 @@ type rdbAdminStats struct {
 		ManagedMemorySizeInMB      float64 `json:"ManagedMemorySizeInMB"`
 		TotalProcessMemorySizeInMB float64 `json:"TotalProcessMemorySizeInMB"`
 	} `json:"Memory"`
+    LoadedDatabases []rdbLoadedDatabases `json:"LoadedDatabases"`
 }
 
 type rdbLoadedDatabases struct {
@@ -78,10 +98,10 @@ type rdbLoadedDatabases struct {
     CountOfDocuments                  int    `json:"CountOfDocuments"`
     CountOfAttachments                int    `json:"CountOfAttachments"`
     Metrics struct {
-        DocsWritesPerSecond int `json:"DocsWritesPerSecond"`
-        IndexedPerSecond    int `json:"IndexedPerSecond"`
-        ReducedPerSecond    int `json:"ReducedPerSecond"`
-        RequestsPerSecond   int `json:"RequestsPerSecond"`
+        DocsWritesPerSecond float64 `json:"DocsWritesPerSecond"`
+        IndexedPerSecond    float64 `json:"IndexedPerSecond"`
+        ReducedPerSecond    float64 `json:"ReducedPerSecond"`
+        RequestsPerSecond   float64 `json:"RequestsPerSecond"`
         Requests struct {
             Count int `json:"Count"`
         } `json:"Requests"`
@@ -96,17 +116,17 @@ type rdbLoadedDatabases struct {
         } `json:"StaleIndexReduces"`
         Gauges struct {
             RavenDatabaseIndexingIndexBatchSizeAutoTuner struct {
-                MaxNumberOfItems     int `json:"MaxNumberOfItems"`
-                CurrentNumberOfItems int `json:"CurrentNumberOfItems"`
-                InitialNumberOfItems int `json:"InitialNumberOfItems"`
+                MaxNumberOfItems     string `json:"MaxNumberOfItems"`
+                CurrentNumberOfItems string `json:"CurrentNumberOfItems"`
+                InitialNumberOfItems string `json:"InitialNumberOfItems"`
             }  `json:"Raven.Database.Indexing.IndexBatchSizeAutoTuner"`
             RavenDatabaseIndexingReduceBatchSizeAutoTuner struct {
-                MaxNumberOfItems     int `json:"MaxNumberOfItems"`
-                CurrentNumberOfItems int `json:"CurrentNumberOfItems"`
-                InitialNumberOfItems int `json:"InitialNumberOfItems"`
+                MaxNumberOfItems     string `json:"MaxNumberOfItems"`
+                CurrentNumberOfItems string `json:"CurrentNumberOfItems"`
+                InitialNumberOfItems string `json:"InitialNumberOfItems"`
             }  `json:"Raven.Database.Indexing.ReduceBatchSizeAutoTuner"`
             RavenDatabaseIndexingWorkContext struct {
-                RunningQueriesCount int `json:"RunningQueriesCount"`
+                RunningQueriesCount string `json:"RunningQueriesCount"`
             }  `json:"Raven.Database.Indexing.WorkContext"`
         } `json:"Gauges"`
     } `json:"Metrics"`
@@ -134,8 +154,21 @@ type rdbIndexes struct {
 }
 
 const (
-	DescRdbTotalRequests  = "Number of requests that have been executed against the server"
-    DescRdbMemoryDatabaseCacheSize  = "Size of the database cache"
-    DescRdbManagedMemorySize  = "Size of managed memory taken by server"
-    DescRdbTotalProcessMemorySize  = "Total size of memory taken by server"
+	DescRdbTotalRequests = "Number of requests that have been executed against the server"
+    DescRdbMemoryDatabaseCacheSize = "Size of the database cache"
+    DescRdbManagedMemorySize = "Size of managed memory taken by server"
+    DescRdbTotalProcessMemorySize = "Total size of memory taken by server"
+    DescTransactionalStorageAllocatedSize = "The amount of storage allocated for transactions"
+    DescTransactionalStorageUsedSize = "The amount of storage used for transactions"
+    DescIndexStorageSize = "The amount of storage in use by indexes"
+    DescTotalDatabaseSize = "The total size of the database"
+    DescCountofDocuments = "The count of documents in the database"
+    DescCountOfAttachments = "The count of attachments in the database"
+    DescMetricsDocsWritesPerSecond = "The number of documents written to the database per second"
+    DescMetricsIndexedPerSecond = "The number of documents indexes created per second"
+    DescMetricsReducedPerSecond = "The nubmer of documents reduced per second"
+    DescMetricsRequestsCount = "Count of requests made against the database"
+    DescMetricsRequestsDurationCounter = ""
+    DescMetricsStaleIndexMapsCounter = ""
+    DescMetricsStaleIndexReducesCounter = ""
 )

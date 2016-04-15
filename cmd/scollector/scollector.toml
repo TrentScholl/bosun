@@ -1,0 +1,8 @@
+host="dev-bosun.ops.console.com.au:8070"
+fullhost=true
+[Tags]
+  environment="dev"
+[[AWS]]
+  AccessKey = "AKIAJF5TX2PAM4KVG5AA"
+  SecretKey = "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"
+  Region = "ap-southeast-2"

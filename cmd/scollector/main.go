@@ -106,6 +106,9 @@ func main() {
 	for _, rmq := range conf.RabbitMQ {
 		check(collectors.RabbitMQ(rmq.URL))
 	}
+	for _, rdb := range conf.RavenDB {
+		check(collectors.RavenDB(rdb.URL))
+	}
 	for _, cfg := range conf.SNMP {
 		check(collectors.SNMP(cfg, conf.MIBS))
 	}

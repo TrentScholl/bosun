@@ -3,6 +3,7 @@ package collectors
 import (
 	"fmt"
 	"time"
+    "regexp"
 
 	"bosun.org/metadata"
 	"bosun.org/opentsdb"
@@ -246,8 +247,19 @@ func awsGetCPUCreditBalance(cw cloudwatch.CloudWatch, md *opentsdb.MultiDataPoin
 	if err != nil {
 		return err
 	}
+    name := "None"
+    for _, keys := range instance.Tags {
+        if *keys.Key == "Name" {
+            reg, err := regexp.Compile("[^A-Za-z0-9]+")
+            if err != nil {
+                return err
+            }
+            name = reg.ReplaceAllString(*keys.Value, "_")
+        }
+    }    
+    ts := opentsdb.TagSet{"instance": *instance.InstanceId, "name": name}
 	for _, datapoint := range resp.Datapoints {
-		AddTS(md, awsEC2CPUCreditBalance, datapoint.Timestamp.Unix(), *datapoint.Average, opentsdb.TagSet{"instance": *instance.InstanceId}, metadata.Gauge, metadata.Count, descAWSEC2CPUCreditBalance)
+		AddTS(md, awsEC2CPUCreditBalance, datapoint.Timestamp.Unix(), *datapoint.Average, ts, metadata.Gauge, metadata.Count, descAWSEC2CPUCreditBalance)
 	}
 	return nil
 }

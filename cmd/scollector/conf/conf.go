@@ -72,6 +72,7 @@ type Conf struct {
 	TagOverride         []TagOverride
 	HadoopHost          string
 	Oracles             []Oracle
+    RavenDB             []RavenDB
 }
 
 type HAProxy struct {
@@ -209,4 +210,8 @@ type Oracle struct {
 type OracleInstance struct {
 	ConnectionString string
 	Role             string
+}
+
+type RavenDB struct {
+	URL string
 }

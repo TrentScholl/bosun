@@ -198,7 +198,7 @@ escount returns a time bucked count of matching documents. It uses the keystring
   * `bucketDuration` is an opentsdb duration string. It sets the the span of time to bucket the count of documents. For example, "1m" will give you the count of documents per minute.
   * `startDuration` and `endDuration` set the time window from now - see the OpenTSDB q() function for more details.
 
-### esstat(indexRoot ESIndexer, keyString string, filter ESQuery, bucketDuration string, startDuration string, endDuration string) seriesSet
+### esstat(indexRoot ESIndexer, keyString string, filter ESQuery, field string, rStat string, bucketDuration string, startDuration string, endDuration string) seriesSet
 
 estat returns various summary stats per bucket for the specified `field`. The field must be numeric in elastic. rStat can be one of `avg`, `min`, `max`, `sum`, `sum_of_squares`, `variance`, `std_deviation`. The rest of the fields behave the same as escount.
 
@@ -231,16 +231,16 @@ esand takes one or more ESQueries and combines them into an [elastic bool query]
 ### esor(queries.. ESQuery) ESQuery
 esor takes one or more ESQueries and combines them into an [elastic bool query](https://www.elastic.co/guide/en/elasticsearch/reference/2.x/query-dsl-bool-query.html) so that at least one must be true.
 
-###esgt(field string, value Scalar) ESQuery
+### esgt(field string, value Scalar) ESQuery
 esgt takes a field (expected to be numeric field in elastic) and returns results where the value of that field is greater than the specified value. It creates an [elastic range query](https://www.elastic.co/guide/en/elasticsearch/reference/2.x/query-dsl-range-query.html).
 
-###esgte(field string, value Scalar) ESQuery
+### esgte(field string, value Scalar) ESQuery
 esgt takes a field (expected to be numeric field in elastic) and returns results where the value of that field is greater than or equal to the specified value. It creates an [elastic range query](https://www.elastic.co/guide/en/elasticsearch/reference/2.x/query-dsl-range-query.html).
 
-###eslt(field string, value Scalar) ESQuery
+### eslt(field string, value Scalar) ESQuery
 esgt takes a field (expected to be numeric field in elastic) and returns results where the value of that field is less than the specified value. It creates an [elastic range query](https://www.elastic.co/guide/en/elasticsearch/reference/2.x/query-dsl-range-query.html).
 
-###eslte(field string, value Scalar) ESQuery
+### eslte(field string, value Scalar) ESQuery
 esgt takes a field (expected to be numeric field in elastic) and returns results where the value of that field is less than or equal to the specified value. It creates an [elastic range query](https://www.elastic.co/guide/en/elasticsearch/reference/2.x/query-dsl-range-query.html).
 
 

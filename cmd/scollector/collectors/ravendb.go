@@ -168,7 +168,7 @@ const (
     DescMetricsIndexedPerSecond = "The number of documents indexes created per second"
     DescMetricsReducedPerSecond = "The nubmer of documents reduced per second"
     DescMetricsRequestsCount = "Count of requests made against the database"
-    DescMetricsRequestsDurationCounter = ""
-    DescMetricsStaleIndexMapsCounter = ""
-    DescMetricsStaleIndexReducesCounter = ""
+    DescMetricsRequestsDurationCounter = "Duration each request took"
+    DescMetricsStaleIndexMapsCounter = "Count of stale index maps"
+    DescMetricsStaleIndexReducesCounter = "Count of stale index reduces"
 )

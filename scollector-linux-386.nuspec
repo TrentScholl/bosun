@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>scollector</id>
+        <version>$version$</version>
+        <authors>Console Australia Pty Ltd</authors>
+        <owners>Console Australia Pty Ltd</owners>
+        <licenseUrl>http://www.console.com.au/</licenseUrl>
+        <projectUrl>http://www.console.com.au/</projectUrl>
+        <iconUrl>http://www.console.com.au/</iconUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>A package that contains scollector.</description>
+        <releaseNotes></releaseNotes>
+        <copyright></copyright>
+        <tags></tags>
+        <dependencies></dependencies>
+    </metadata>
+
+    <files>
+        <file src="bin\scollector-linux-386.exe" target="\" />
+    </files>
+
+</package>

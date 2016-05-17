@@ -26,7 +26,7 @@ Function Build
 
     Write-Host "Building scollector for $os ($arch)"
 
-    go build -o "scollector-$os-$arch$ext" -ldflags "-X bosun.org/_version.VersionSHA=$GitSHA -X bosun.org/_version.OfficialBuild=true -X bosun.org/_version.VersionDate=$VersionDate" .\cmd\scollector 
+    go build -o "bin\scollector-$os-$arch$ext" -ldflags "-X bosun.org/_version.VersionSHA=$GitSHA -X bosun.org/_version.OfficialBuild=true -X bosun.org/_version.VersionDate=$VersionDate" .\cmd\scollector 
 }
 
 Write-Host "Running collector tests..."

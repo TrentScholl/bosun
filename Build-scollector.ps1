@@ -1,3 +1,5 @@
+$env:GOPATH = (Get-Item $PSScriptRoot).Parent.Parent.FullName
+
 $env:GOOS = "windows"
 $env:GOARCH = "amd64"
 

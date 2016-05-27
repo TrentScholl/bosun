@@ -73,6 +73,7 @@ type Conf struct {
 	HadoopHost          string
 	Oracles             []Oracle
     RavenDB             []RavenDB
+	Fastly              []Fastly
 }
 
 type HAProxy struct {
@@ -98,6 +99,11 @@ type GoogleAnalytics struct {
 	Secret   string
 	Token    string
 	Sites    []GoogleAnalyticsSite
+}
+
+type Fastly struct {
+	Key            string
+	StatusBaseAddr string
 }
 
 type GoogleAnalyticsSite struct {
@@ -190,10 +196,11 @@ type RedisCounters struct {
 }
 
 type ExtraHop struct {
-	Host          string
-	APIKey        string
-	FilterBy      string
-	FilterPercent int
+	Host              string
+	APIKey            string
+	FilterBy          string
+	FilterPercent     int
+	AdditionalMetrics []string
 }
 
 type TagOverride struct {

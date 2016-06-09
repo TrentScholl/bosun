@@ -17,7 +17,7 @@
     </metadata>
 
     <files>
-        <file src="bin\scollector-linux-386.exe" target="\" />
+        <file src="bin\scollector-linux-386" target="\" />
     </files>
 
 </package>

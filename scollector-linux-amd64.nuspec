@@ -17,7 +17,7 @@
     </metadata>
 
     <files>
-        <file src="bin\scollector-linux-amd64" target="\" />
+        <file src="bin\scollector-linux-amd64*" target="\" />
     </files>
 
 </package>

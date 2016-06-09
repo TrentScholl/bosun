@@ -17,7 +17,7 @@
     </metadata>
 
     <files>
-        <file src="bin\scollector-windows-386.exe" target="\" />
+        <file src="bin\scollector-windows-386.exe" target="" />
     </files>
 
 </package>

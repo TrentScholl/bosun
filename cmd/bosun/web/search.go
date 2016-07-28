@@ -63,7 +63,16 @@ func FilteredTagsetsByMetric(t miniprofiler.Timer, w http.ResponseWriter, r *htt
 			return nil, err
 		}
 	}
-	return schedule.Search.FilteredTagSets(metric, tagset)
+
+	since := int64(0)
+	sinceStr := r.FormValue("since")
+	if sinceStr != "" {
+		since, err = strconv.ParseInt(sinceStr, 10, 64) //since will be set to 0 again in case of errors
+		if err != nil {
+			return nil, err
+		}
+	}
+	return schedule.Search.FilteredTagSets(metric, tagset, since)
 }
 
 func MetricsByTagPair(t miniprofiler.Timer, w http.ResponseWriter, r *http.Request) (interface{}, error) {
@@ -76,7 +85,7 @@ func MetricsByTagPair(t miniprofiler.Timer, w http.ResponseWriter, r *http.Reque
 func MetricsByTagKey(t miniprofiler.Timer, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	vars := mux.Vars(r)
 	tagk := vars["tagk"]
-	tagValues, err := schedule.Search.TagValuesByTagKey(tagk, time.Duration(schedule.Conf.SearchSince))
+	tagValues, err := schedule.Search.TagValuesByTagKey(tagk, time.Duration(schedule.SystemConf.GetSearchSince()))
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +107,7 @@ func TagValuesByTagKey(t miniprofiler.Timer, w http.ResponseWriter, r *http.Requ
 	s := r.FormValue("since")
 	var since opentsdb.Duration
 	if s == "default" {
-		since = schedule.Conf.SearchSince
+		since = schedule.SystemConf.GetSearchSince()
 	} else if s != "" {
 		var err error
 		since, err = opentsdb.ParseDuration(s)

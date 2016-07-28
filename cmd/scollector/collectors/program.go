@@ -117,8 +117,13 @@ var setupExternalCommand = func(cmd *exec.Cmd) {}
 
 func (c *ProgramCollector) runProgram(dpchan chan<- *opentsdb.DataPoint) (progError error) {
 	var cmd *exec.Cmd
+<<<<<<< HEAD
 	if runtime.GOOS == "windows" && filepath.Ext(c.Path) == ".ps1" {
 		cmd = exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", c.Path)
+=======
+	if runtime.GOOS == "windows" && strings.EqualFold(filepath.Ext(c.Path), ".ps1") {
+		cmd = exec.Command("powershell", "-NoProfile", "-NoLogo", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", c.Path)
+>>>>>>> upstream/master
 	} else {
 		cmd = exec.Command(c.Path)
 	}
@@ -227,7 +232,7 @@ func parseTcollectorValue(line string) (*opentsdb.DataPoint, error) {
 	if err != nil {
 		return nil, fmt.Errorf("bad value: %s", sp[2])
 	}
-	if !opentsdb.ValidTag(sp[0]) {
+	if !opentsdb.ValidTSDBString(sp[0]) {
 		return nil, fmt.Errorf("bad metric: %s", sp[0])
 	}
 	dp := opentsdb.DataPoint{
